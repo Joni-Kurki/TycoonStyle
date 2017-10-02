@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Structure_Linker_Script : MonoBehaviour {
 	Structure _structureBase;
-	Woods_Resource_Structure_Controller _resController;
-	Woods_Production_Structure_Controller _prodController;
+	public Wood_Resource_Structure_Controller _resController;
+	public Wood_Production_Structure_Controller _prodController;
 	bool isConnected = false;
 
 	// Use this for initialization
@@ -30,7 +30,7 @@ public class Structure_Linker_Script : MonoBehaviour {
 		bool foundOpenProd = false;
 
 		for (int i = 0; i < list.Length; i++) {
-			_resController = list [i].GetComponent<Woods_Resource_Structure_Controller> ();
+			_resController = list [i].GetComponent<Wood_Resource_Structure_Controller> ();
 			if (!_resController._isConnected) {
 				_resController.StartConnecting ();
 				foundOpenRes = true;
@@ -39,7 +39,7 @@ public class Structure_Linker_Script : MonoBehaviour {
 		}
 
 		for (int i = 0; i < list2.Length; i++) {
-			_prodController = list2 [i].GetComponent<Woods_Production_Structure_Controller> ();
+			_prodController = list2 [i].GetComponent<Wood_Production_Structure_Controller> ();
 			if (!_prodController._isConnected) {
 				_prodController.StartConnecting ();
 				foundOpenProd = true;
@@ -54,16 +54,8 @@ public class Structure_Linker_Script : MonoBehaviour {
 		}
 	}
 
-	public void SetResourceStructure(){
-
-	}
-
-	public void SetProductionStructure(){
-
-	}
-
 	private void LinkWoodResourceAndProduction(){
-		Debug.DrawLine (_resController.transform.position, _prodController.transform.position, Color.red, 15);
+		Debug.DrawLine (_resController.transform.position, _prodController.transform.position, Color.red, 1);
 	}
 
 }

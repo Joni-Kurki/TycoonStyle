@@ -8,7 +8,8 @@ public class Structure {
 
 	public enum _buildingType {
 		Production = 0,
-		Resource = 1
+		Resource = 1,
+		Storage = 2
 	}
 }
 
@@ -80,4 +81,27 @@ public class Wood_Production_Structure : Structure{
 	}
 
 	// IENumeratorilla products ready
+}
+
+public class Wood_Storage_Structure : Structure {
+	private const int MAX_STORAGE_CAPACITY = 500;
+	private int _currentWood;
+
+	public Wood_Storage_Structure(string name){
+		_buildingType bType = _buildingType.Storage;
+		_currentWood = 0;
+		_structureName = name;
+	}
+
+	public void FillStorage(int value){
+		if (_currentWood + value > MAX_STORAGE_CAPACITY) {
+			_currentWood = MAX_STORAGE_CAPACITY;
+		}
+		_currentWood += value;
+
+	}
+
+	public int GetStorage(){
+		return _currentWood;
+	}
 }
