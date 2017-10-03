@@ -35,7 +35,7 @@ public class Wood_Resource_Structure_Controller : MonoBehaviour {
 	}
 
 	void OnMouseDown(){
-		_isConnectingInProgress = true;
+		//_isConnectingInProgress = true;
 		Debug.Log ("Mouse! and "+ _isConnectingInProgress  + this.name);
 	}
 }

@@ -17,10 +17,10 @@ public class Road_Controller : MonoBehaviour {
 	float _lastCheck;
 
 	void Start () {
-		_roadBranch = new Road_Branch (_start, _end);
-		MakeRoadStart ();
-		MakeRoadEnd ();
-		_cursor = _start;
+		//_roadBranch = new Road_Branch (_start, _end);
+		//MakeRoadStart ();
+		//MakeRoadEnd ();
+		//_cursor = _start;
 		xDone = false;
 		zDone = false;
 		xzDone = false;
@@ -31,18 +31,33 @@ public class Road_Controller : MonoBehaviour {
 	void Update () {
 		Debug.DrawLine (_start, _end, Color.blue);
 		if (Time.time > _lastCheck + ROAD_TILE_BUILD_TIME ) {
-			if (!xzDone) {
+			
+				
 				MakeRoadBetweenPoints (xDone, zDone);
-			}
+
 			_lastCheck = Time.time;
 		} 
 	}
+
+	public void SetPoints(Vector3 start, Vector3 end){
+		Debug.Log (start);
+		_start = new Vector3((float)System.Math.Round(start.x,1),(float)System.Math.Round(start.y,1),(float)System.Math.Round(start.z,1));
+		//Debug.Log (" -> "+_start);
+		//Debug.Log(new Vector3((float)System.Math.Round(start.x,2),(float)System.Math.Round(start.y,2),(float)System.Math.Round(start.z,2)));
+		_cursor = _start;
+		_end = new Vector3((float)System.Math.Round(end.x,1),(float)System.Math.Round(end.y,1),(float)System.Math.Round(end.z,1));
+		MakeRoadStart ();
+		MakeRoadEnd ();
+		xzDone = false;
+		MakeRoadBetweenPoints (false, false);
+	}
+		
 	void MakeRoadStart(){
 		var offsetX = _start.x > _end.x ? -ROAD_OFFSET : ROAD_OFFSET;
 		var position = new Vector3 (offsetX, 0, 0) + _start;
 		_cursor = position;
 		_start = position;
-		_roadBranch.AddRoadTile (position,1);
+		//_roadBranch.AddRoadTile (position,1);
 
 		Instantiate (roadTilePrefab, position, Quaternion.identity, this.transform);
 	}
@@ -51,12 +66,19 @@ public class Road_Controller : MonoBehaviour {
 		var position = new Vector3 (0, 0, offsetZ) + _end;
 		_end = position;
 
-		_roadBranch.AddRoadTile (position,1);
+		//_roadBranch.AddRoadTile (position,1);
 		Instantiate (roadTilePrefab, position, Quaternion.identity, this.transform);
 	}
 	void MakeRoadBetweenPoints(bool xDone, bool zDone){
+		if (Vector3.Distance (_cursor, _end) < ROAD_SIZE) {
+			xDone = true;
+			zDone = true;
+			xzDone = true;
+		}
+		//Debug.Log ("@Road points");
 		int x = (int)_cursor.x;
 		if (!xDone) {
+			//Debug.Log ("@Road points: !xDone");
 			if (_cursor.x +ROAD_SIZE < _end.x) {
 				if (_cursor.x >= _end.x) {
 					xDone = true;
@@ -74,6 +96,7 @@ public class Road_Controller : MonoBehaviour {
 			}
 		}
 		if (xDone && !zDone) {
+			//Debug.Log ("@Road points: !zDone");
 			if (_cursor.z < _end.z) {
 				if (_cursor.z >= _end.z) {
 					zDone = true;
