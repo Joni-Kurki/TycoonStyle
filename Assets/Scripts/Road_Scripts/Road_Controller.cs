@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Road_Controller : MonoBehaviour {
+    public GameObject roadTilePrefab;
+    public GameObject emptyRoadContainerPrefab;
 
-	Road_Branch _roadBranch;
+    Road_Branch _roadBranch;
 	public Vector3 _start;
 	public Vector3 _end;
-	public GameObject roadTilePrefab;
+	
 	Vector3 _cursor;
 	// wood_res/prod.x/2 +  oma.x/2
 	private const float ROAD_OFFSET = 0.5f;
@@ -15,12 +17,11 @@ public class Road_Controller : MonoBehaviour {
 	private const float ROAD_TILE_BUILD_TIME = 0.25f;
 	public bool xDone, zDone, xzDone;
 	float _lastCheck;
+    public bool AdminDebug = false;
+    GameObject _container;
 
-	void Start () {
+    void Start () {
 		//_roadBranch = new Road_Branch (_start, _end);
-		//MakeRoadStart ();
-		//MakeRoadEnd ();
-		//_cursor = _start;
 		xDone = false;
 		zDone = false;
 		xzDone = false;
@@ -29,7 +30,9 @@ public class Road_Controller : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Debug.DrawLine (_start, _end, Color.blue);
+        if (AdminDebug) {
+            Debug.DrawLine(_start, _end, Color.blue);
+        }
 		if (Time.time > _lastCheck + ROAD_TILE_BUILD_TIME ) {
 			
 				
@@ -40,7 +43,9 @@ public class Road_Controller : MonoBehaviour {
 	}
 
 	public void SetPoints(Vector3 start, Vector3 end){
-		Debug.Log (start);
+        if (AdminDebug) {
+            Debug.Log(start);
+        }
 		_start = new Vector3((float)System.Math.Round(start.x,1),(float)System.Math.Round(start.y,1),(float)System.Math.Round(start.z,1));
 		//Debug.Log (" -> "+_start);
 		//Debug.Log(new Vector3((float)System.Math.Round(start.x,2),(float)System.Math.Round(start.y,2),(float)System.Math.Round(start.z,2)));
@@ -57,9 +62,9 @@ public class Road_Controller : MonoBehaviour {
 		var position = new Vector3 (offsetX, 0, 0) + _start;
 		_cursor = position;
 		_start = position;
-		//_roadBranch.AddRoadTile (position,1);
-
-		Instantiate (roadTilePrefab, position, Quaternion.identity, this.transform);
+        //_roadBranch.AddRoadTile (position,1);
+         _container = Instantiate(emptyRoadContainerPrefab);
+		Instantiate (roadTilePrefab, position, Quaternion.identity, _container.transform);
 	}
 	void MakeRoadEnd(){
 		var offsetZ = _end.z > _start.z ? -ROAD_OFFSET : ROAD_OFFSET;
@@ -67,13 +72,14 @@ public class Road_Controller : MonoBehaviour {
 		_end = position;
 
 		//_roadBranch.AddRoadTile (position,1);
-		Instantiate (roadTilePrefab, position, Quaternion.identity, this.transform);
+		//Instantiate (roadTilePrefab, position, Quaternion.identity, this.transform);
 	}
 	void MakeRoadBetweenPoints(bool xDone, bool zDone){
 		if (Vector3.Distance (_cursor, _end) < ROAD_SIZE) {
 			xDone = true;
 			zDone = true;
 			xzDone = true;
+            Destroy(gameObject);
 		}
 		//Debug.Log ("@Road points");
 		int x = (int)_cursor.x;
@@ -84,13 +90,13 @@ public class Road_Controller : MonoBehaviour {
 					xDone = true;
 				}
 				_cursor.x += ROAD_SIZE;
-				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, this.transform);
+				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, _container.transform);
 			} else if (_cursor.x > _end.x) {
 				if (_cursor.x >= _end.x) {
 					xDone = true;
 				}
 				_cursor.x -= ROAD_SIZE;
-				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, this.transform);
+				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, _container.transform);
 			} else {
 				xDone = true;
 			}
@@ -103,14 +109,14 @@ public class Road_Controller : MonoBehaviour {
 					xzDone = true;
 				}
 				_cursor.z += ROAD_SIZE;
-				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, this.transform);
+				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, _container.transform);
 			} else if (_cursor.z > _end.z) {
 				if (_cursor.z >= _end.z) {
 					zDone = true;
 					xzDone = true;
 				}
 				_cursor.z -= ROAD_SIZE;
-				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, this.transform);
+				Instantiate (roadTilePrefab, _cursor, Quaternion.identity, _container.transform);
 			} else {
 				zDone = true;
 				xzDone = true;

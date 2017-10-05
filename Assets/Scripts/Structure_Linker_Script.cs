@@ -7,9 +7,10 @@ public class Structure_Linker_Script : MonoBehaviour {
 	public Wood_Resource_Structure_Controller _resController;
 	public Wood_Production_Structure_Controller _prodController;
 	bool isConnected = false;
+    public bool AdminDebug = false;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
 		_structureBase = new Structure();
 		_structureBase._structureName = "Linker";
 	}
@@ -55,7 +56,9 @@ public class Structure_Linker_Script : MonoBehaviour {
 	}
 
 	private void LinkWoodResourceAndProduction(){
-		Debug.DrawLine (_resController.transform.position, _prodController.transform.position, Color.red, 1);
+        if (AdminDebug) {
+            Debug.DrawLine(_resController.transform.position, _prodController.transform.position, Color.red, 1);
+        }
 	}
 
 }

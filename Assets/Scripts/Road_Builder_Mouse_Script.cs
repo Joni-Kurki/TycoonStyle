@@ -6,12 +6,15 @@ public class Road_Builder_Mouse_Script : MonoBehaviour {
 
 	Road_Controller road_controller;
 	public GameObject roadContainerPrefab;
+    public GameObject mouse_HitInfoPrefab;
 	bool _toggleStart;
 	bool _toggleEnd;
 	bool _canBuildRoad;
 	bool _hasBuilt;
+    bool _hasInstantiatedNew;
 	Vector3 _togglePointStart;
 	Vector3 _togglePointEnd;
+    public bool AdminDebug = false;
 
 	// Use this for initialization
 	void Start () {
@@ -20,7 +23,9 @@ public class Road_Builder_Mouse_Script : MonoBehaviour {
 		_toggleEnd = false;
 		_canBuildRoad = false;
 		_hasBuilt = false;
-	}
+        _hasInstantiatedNew = false;
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -29,8 +34,9 @@ public class Road_Builder_Mouse_Script : MonoBehaviour {
 			bool hit = Physics.Raycast (Camera.main.ScreenPointToRay (Input.mousePosition), out hitInfo);
 			// jos osutaan johonki gameobjektiin
 			if (hit) {
-				Debug.Log ("Hit " + hitInfo.transform.gameObject.name);
-
+                if (AdminDebug) {
+                    Debug.Log("Hit " + hitInfo.transform.gameObject.name);
+                }
 				if (hitInfo.transform.gameObject.name == "Plane") {
 					//Debug.Log (">>> >> > " + transform.gameObject.name);
 					if (!_toggleStart && !_toggleEnd) {
@@ -55,5 +61,14 @@ public class Road_Builder_Mouse_Script : MonoBehaviour {
 			road_controller.SetPoints (_togglePointStart, _togglePointEnd);
 			_hasBuilt = true;
 		}
+        if (_hasBuilt && !_hasInstantiatedNew) {
+            Instantiate(mouse_HitInfoPrefab);
+            _hasInstantiatedNew = true;
+        }
+        if(road_controller != null ) {
+            if (road_controller.xzDone) {
+                Destroy(gameObject);
+            }
+        }
 	}
 }
