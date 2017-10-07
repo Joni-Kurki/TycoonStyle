@@ -25,8 +25,8 @@ public class Structure_Linker_Script : MonoBehaviour {
 	}
 
 	public void GetAllWoods(){
-		GameObject[] list = GameObject.FindGameObjectsWithTag ("Woods_Resource_Structure"); 
-		GameObject[] list2 = GameObject.FindGameObjectsWithTag ("Woods_Production_Structure");
+		GameObject[] list = GameObject.FindGameObjectsWithTag ("Wood_Resource_Structure"); 
+		GameObject[] list2 = GameObject.FindGameObjectsWithTag ("Wood_Production_Structure");
 		bool foundOpenRes = false;
 		bool foundOpenProd = false;
 
