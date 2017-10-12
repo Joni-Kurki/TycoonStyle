@@ -28,7 +28,10 @@ public class Wood_Resource_Structure : Structure {
 	public float GetResourceInterval(){
 		return resourceInterval;
 	}
-
+    /// <summary>
+    /// Returns current amount of wood this structure has.
+    /// </summary>
+    /// <returns></returns>
 	public int GetCurrentCapacity(){
 		return currentCapacity;
 	}

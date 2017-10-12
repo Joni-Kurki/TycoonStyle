@@ -23,7 +23,17 @@ public class Storage_Vehicle_Module : Vehicle_Module {
         _name = name;
         _moduleType = _vehicleModuleType.Storage;
         _moduleSize = size;
-        _moduleList = new Vehicle_Module_List();
+    }
+}
+
+public class Weapon_Vehicle_Module : Vehicle_Module {
+
+    Vehicle_Module._vehicleModuleType _moduleType;
+
+    public Weapon_Vehicle_Module(string name, int size) {
+        _name = name;
+        _moduleType = _vehicleModuleType.Weapon;
+        _moduleSize = size;
     }
 }
 
@@ -40,16 +50,23 @@ public class Tool_Vehicle_Module : Vehicle_Module {
 
 public class Vehicle_Module_List {
 
-    public List<Object> _moduleList;
+    public List<Storage_Vehicle_Module> _storageModuleList;
+    public List<Weapon_Vehicle_Module> _weaponModuleList;
+    public List<Tool_Vehicle_Module> _toolModuleList;
 
     public Vehicle_Module_List() {
-        _moduleList = new List<Object>();
+        _storageModuleList = new List<Storage_Vehicle_Module>();
+        _weaponModuleList = new List<Weapon_Vehicle_Module>();
+        _toolModuleList = new List<Tool_Vehicle_Module>();
     }
 
-    public List<Object> GetModules() {
-        return _moduleList;
+    public void AddStorageModule(Storage_Vehicle_Module module) {
+        _storageModuleList.Add(module);
     }
-    public void AddModule(Object module) {
-        _moduleList.Add(module);
+    public void AddWeaponModule(Weapon_Vehicle_Module module) {
+        _weaponModuleList.Add(module);
+    }
+    public void AddToolModule(Tool_Vehicle_Module module) {
+        _toolModuleList.Add(module);
     }
 }
