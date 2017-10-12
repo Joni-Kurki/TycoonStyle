@@ -9,7 +9,7 @@ public class Vehicle_Module {
     public Vehicle_Module_List _moduleList;
 
     public enum _vehicleModuleType {
-        Storage = 1,
+        Storage = 0,
         Weapon,
         Tool
     }
