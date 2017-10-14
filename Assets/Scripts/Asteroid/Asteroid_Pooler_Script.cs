@@ -14,11 +14,40 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
     public int _numberOfAsteroidsMin;
     public int _numberOfAsteroidsMax;
 
+    public int _numberOfAsteroidsSpawned;
+
+    private bool _initFromCode;
     // Use this for initialization
     void Start () {
-        InstantiateAsteroids(_spanwLocation);
+        _initFromCode = false;
+        //InstantiateAsteroids(_spanwLocation);
     }
 	
+    /// <summary>
+    /// This method is used for setting all needed values to make asteroid belt from code and not editor.
+    /// </summary>
+    /// <param name="asteroidPrefab"></param>
+    /// <param name="spanwLocation"></param>
+    /// <param name="distanceOffsetMin"></param>
+    /// <param name="distanceOffsetMax"></param>
+    /// <param name="yOffsetMin"></param>
+    /// <param name="yOffsetMax"></param>
+    /// <param name="numberOfAsteroidsMin"></param>
+    /// <param name="numberOfAsteroidsMax"></param>
+    public void SetInitialValues(   Vector3 spanwLocation, float distanceOffsetMin, float distanceOffsetMax, 
+                                    float yOffsetMin, float yOffsetMax, int numberOfAsteroidsMin, int numberOfAsteroidsMax) {
+        _spanwLocation = spanwLocation;
+        _distanceOffsetMin = distanceOffsetMin;
+        _distanceOffsetMax = distanceOffsetMax;
+        _yOffsetMin = yOffsetMin;
+        _yOffsetMax = yOffsetMax;
+        _numberOfAsteroidsMin = numberOfAsteroidsMin;
+        _numberOfAsteroidsMax = numberOfAsteroidsMax;
+        _initFromCode = true;
+
+        InstantiateAsteroids(_spanwLocation);
+    }
+
 	// Update is called once per frame
 	void Update () {
 		
@@ -33,6 +62,7 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
     void InstantiateAsteroids(Vector3 location) {
 
         int randomN = Random.Range(_numberOfAsteroidsMin, _numberOfAsteroidsMax);
+        _numberOfAsteroidsSpawned = randomN;
         for (int i = 0; i < randomN; i++) {
             // Let's random the angle
             float angle = Random.Range(0f, 360f);
