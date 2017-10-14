@@ -12,7 +12,7 @@ public class UniversumCreator : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         _asteroidSpawnerList = new List<GameObject>();
-        SpawnSomeSpawnersAndShit(1, _asteroidSpawnerInitialLocations);
+        SpawnSomeSpawnersAndShit(4, _asteroidSpawnerInitialLocations);
     }
 	
 	// Update is called once per frame
@@ -33,7 +33,7 @@ public class UniversumCreator : MonoBehaviour {
             _asteroidPoolerScript = go.GetComponent<Asteroid_Pooler_Script>();
             go.transform.Translate(spawnLocations[i]);
             
-            _asteroidPoolerScript.SetInitialValues(spawnLocations[i], 6f, 10f, -1.5f, 1.5f, 250, 300);
+            _asteroidPoolerScript.SetInitialValues(spawnLocations[i], 6f+i*4, 10f+i*4, -1.5f, 1.5f, 250, 300);
         }
         
     }

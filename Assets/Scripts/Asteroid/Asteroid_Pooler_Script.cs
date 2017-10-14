@@ -13,8 +13,10 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
     public float _yOffsetMax;
     public int _numberOfAsteroidsMin;
     public int _numberOfAsteroidsMax;
-
+    
+    // For Asteroid tracking
     public int _numberOfAsteroidsSpawned;
+    public int _currentAmountOfAsteroids;
 
     private bool _initFromCode;
     // Use this for initialization
@@ -63,6 +65,7 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
 
         int randomN = Random.Range(_numberOfAsteroidsMin, _numberOfAsteroidsMax);
         _numberOfAsteroidsSpawned = randomN;
+        _currentAmountOfAsteroids = _numberOfAsteroidsSpawned;
         for (int i = 0; i < randomN; i++) {
             // Let's random the angle
             float angle = Random.Range(0f, 360f);

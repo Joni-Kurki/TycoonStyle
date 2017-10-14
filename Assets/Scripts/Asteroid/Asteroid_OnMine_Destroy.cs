@@ -13,6 +13,8 @@ public class Asteroid_OnMine_Destroy : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         if (_pickedUp) {
+            Asteroid_Pooler_Script a = transform.parent.GetComponent<Asteroid_Pooler_Script>();
+            a._currentAmountOfAsteroids--;
             Destroy(gameObject);
         }
 	}

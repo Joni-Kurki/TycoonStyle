@@ -91,10 +91,15 @@ public class Vehicle_Controller_Script : MonoBehaviour {
         //Debug.Log(goList.Length);
         foreach (GameObject go in goList) {
             if(Vector3.Distance(this.transform.position, go.transform.position) < closestDistance) {
-                _closestGameObject = go;
-                closestDistance = Vector3.Distance(this.transform.position, go.transform.position);
+                Asteroid_Tag_Script at = go.GetComponent<Asteroid_Tag_Script>();
+                if (!at._asteroidIsTagged) {
+                    _closestGameObject = go;
+                    closestDistance = Vector3.Distance(this.transform.position, go.transform.position);
+                }
             }
         }
+        Asteroid_Tag_Script aTag = _closestGameObject.GetComponent<Asteroid_Tag_Script>();
+        aTag._asteroidIsTagged = true;
         _closestDist = (Vector3.Distance(this.transform.position, _closestGameObject.transform.position));
         Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, .2f);
         _hasTarget = true;
