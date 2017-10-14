@@ -18,15 +18,19 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
     public int _numberOfAsteroidsSpawned;
     public int _currentAmountOfAsteroids;
 
+    // Is the asteroid pooler generated from code or via editor
     private bool _initFromCode;
+
+    int[] _asteroidTypeCount = new int[3] { 0,0,0 };
+
     // Use this for initialization
     void Start () {
         _initFromCode = false;
         //InstantiateAsteroids(_spanwLocation);
     }
-	
+
     /// <summary>
-    /// This method is used for setting all needed values to make asteroid belt from code and not editor.
+    /// This method is used for setting all needed values to make asteroid belt from code and not editor. It's like constructor.
     /// </summary>
     /// <param name="asteroidPrefab"></param>
     /// <param name="spanwLocation"></param>
@@ -48,6 +52,27 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
         _initFromCode = true;
 
         InstantiateAsteroids(_spanwLocation);
+
+        _asteroidTypeCount = new int[3];
+    }
+
+    void ClassifyChildAsteroidTypes() {
+        Asteroid_TypeAndData_Script a;
+
+        for (int i=0; i<transform.childCount; i++) {
+            a = transform.GetChild(i).GetComponent<Asteroid_TypeAndData_Script>();
+            //Debug.Log(a.name + " > "+a.GetAsteroidType());
+            if (a.GetAsteroidType() == 2) {
+                _asteroidTypeCount[2]++;
+            }
+            if (a.GetAsteroidType() == 1) {
+                _asteroidTypeCount[1]++;
+            }
+            if (a.GetAsteroidType() == 0) {
+                _asteroidTypeCount[0]++;
+            }
+        }
+        //Debug.Log("C: " + _asteroidTypeCount[0] + "\tS: " + _asteroidTypeCount[1] + "\tM: " + _asteroidTypeCount[2]);
     }
 
 	// Update is called once per frame
@@ -74,10 +99,13 @@ public class Asteroid_Pooler_Script : MonoBehaviour {
             float randomYOffset = Random.Range(_yOffsetMin, _yOffsetMax);
             // Instantiate @ desired location
             var obj = Instantiate(_asteroidPrefab, _spanwLocation, Quaternion.identity, this.transform);
+            obj.name = "Asteroid " + i;
             // Now let's rotate the object and move it to desired angle with randomized distance
             obj.transform.Rotate(new Vector3(0, angle, 0));
             obj.transform.Translate(new Vector3(randomDistance, randomYOffset, randomDistance));
             //Debug.DrawLine(Vector3.zero, obj.transform.position, Color.red, 30);
         }
+
+        ClassifyChildAsteroidTypes();
     }
 }

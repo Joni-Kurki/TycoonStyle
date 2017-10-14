@@ -17,13 +17,52 @@ public class Vehicle_Module {
 
 public class Storage_Vehicle_Module : Vehicle_Module {
 
+    float _currentCargoWeigth;
+    int _maxCargoWeight;
+    const int CARGO_SIZE_MULTIPLIER = 1000;
     Vehicle_Module._vehicleModuleType _moduleType;
 
     public Storage_Vehicle_Module(string name, int size) {
         _name = name;
         _moduleType = _vehicleModuleType.Storage;
         _moduleSize = size;
+        _currentCargoWeigth = 0;
+        _maxCargoWeight = size * CARGO_SIZE_MULTIPLIER;
     }
+
+    public float GetCurrentCargoWeight() {
+        return _currentCargoWeigth;
+    }
+
+    public int GetMaxCargoWeight() {
+        return _maxCargoWeight;
+    }
+
+    /// <summary>
+    /// Checks if we can fit loot to storage
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <returns></returns>
+    public float AddToCargo(float amount) {
+        float temp = 0;
+        // No overflow
+        if(_currentCargoWeigth + amount <= _maxCargoWeight) {
+            _currentCargoWeigth += amount;
+            return 0;
+        } 
+        // Overflow
+        else if (_currentCargoWeigth + amount > _maxCargoWeight) {
+            temp = (_currentCargoWeigth + amount) - _maxCargoWeight;
+            _currentCargoWeigth = _maxCargoWeight;
+            return temp;
+        }
+        return 0;
+    }
+
+    public bool IsCargoFull() {
+        return _currentCargoWeigth == _maxCargoWeight ? true : false;
+    }
+
 }
 
 public class Weapon_Vehicle_Module : Vehicle_Module {

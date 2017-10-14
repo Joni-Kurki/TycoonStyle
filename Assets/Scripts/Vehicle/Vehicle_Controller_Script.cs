@@ -8,6 +8,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     Vehicle _vehicle;
     War_Vehicle _War_vehicle;
     SpaceMiner_Vehicle _SpaceMiner_vehicle;
+    Vehicle_Module_List _vehicle_Module_List;
 
     // Number of modules
     public int _storageNumber;
@@ -16,6 +17,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     public int _vehicleType;
     public string _vehicleName;
     public float _vehicleSpeed;
+    int _currentStorageModule;
 
     // Some distance variables
     GameObject _closestGameObject;
@@ -28,11 +30,13 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     float _miningUnloadDuration;
     float _lastTimerTrigger;
     
-    // Bool's for controlling phases
+    // Booleans for controlling phases
     bool _isMoving;
     bool _hasTarget;
     bool _hasLoad;
     bool _isReturning;
+
+    public string _storageModuleStr;
     // Use this for initialization
     void Start () {
         _baseLocation = transform.position;
@@ -53,6 +57,14 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 _storageNumber = _SpaceMiner_vehicle._numberOfStorageModules;
                 _weaponNumber = _SpaceMiner_vehicle._numberOfWeaponModules;
                 _toolNumber = _SpaceMiner_vehicle._numberOfToolModules;
+
+                _vehicle_Module_List = new Vehicle_Module_List();
+                Storage_Vehicle_Module mod = new Storage_Vehicle_Module("Cargo module", 3);
+                _vehicle_Module_List.AddStorageModule(mod);
+                mod = new Storage_Vehicle_Module("Cargo module 2", 5);
+                _currentStorageModule = 0;
+
+                _vehicle_Module_List.AddStorageModule(mod);
                 _vehicleSpeed = 3.3f;
                 _miningPickUpDuration = 3f;
                 _miningUnloadDuration = 2f;
@@ -80,15 +92,22 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 ReturnHomeBase();
             }
         }
-	}
+        RefreshCargo();
+    }
+
+    private void RefreshCargo() {
+        for (int i = 0; i < _vehicle_Module_List._storageModuleList.Count; i++) {
+            Debug.Log("Cargo["+i+"] "+_vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight() + "/" + _vehicle_Module_List._storageModuleList[i].GetMaxCargoWeight());
+        }
+    }
 
     /// <summary>
-    /// Finds the closest mineable target 
+    /// Finds the closest mineable target and checks if it is tagged, if so finds next one non tagged.
     /// </summary>
     private void FindTarget() {
         GameObject[] goList = GameObject.FindGameObjectsWithTag("Asteroid_Mineable");
         float closestDistance = Mathf.Infinity;
-        //Debug.Log(goList.Length);
+
         foreach (GameObject go in goList) {
             if(Vector3.Distance(this.transform.position, go.transform.position) < closestDistance) {
                 Asteroid_Tag_Script at = go.GetComponent<Asteroid_Tag_Script>();
@@ -117,6 +136,35 @@ public class Vehicle_Controller_Script : MonoBehaviour {
             // Pickup mineable asteroid and destroy gameobject
             Asteroid_OnMine_Destroy goD = _closestGameObject.GetComponent<Asteroid_OnMine_Destroy>();
             goD.PickUp();
+            float overFlowCheck = 0;
+
+            // With this we loop all storage modules and if all of em all full, we cant pick up more cargo.
+            bool allStorageFull = false;
+            for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
+                if (_vehicle_Module_List._storageModuleList[i].IsCargoFull()) {
+                    allStorageFull = true;
+                }else {
+                    allStorageFull = false;
+                }
+            }
+            if (!allStorageFull) {
+                // Check if storage module is full.
+                if (!_vehicle_Module_List._storageModuleList[_currentStorageModule].IsCargoFull()) {
+                    // If we get overflow
+                    overFlowCheck = _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(1600);
+                    if (overFlowCheck != 0) {
+                        Debug.Log("Went over " + overFlowCheck);
+                        if (_currentStorageModule < _vehicle_Module_List._storageModuleList.Count) {
+                            _currentStorageModule++;
+                            _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(overFlowCheck);
+                        } else {
+                            Debug.Log("All storages full!");
+                        }
+                    }
+                }
+            } else {
+                Debug.Log("All cargo used!");
+            }
             _lastTimerTrigger = Time.time + _miningPickUpDuration;
         }
         else {
