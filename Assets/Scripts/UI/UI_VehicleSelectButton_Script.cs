@@ -1,17 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UI_VehicleSelectButton_Script : MonoBehaviour {
 
     GameObject _gameObjectReference;
     int _index;
     Vehicle_Controller_Script _vehicleControllerReference;
+    Text _childText;
 
     // Use this for initialization
     void Start () {
-		
-	}
+        _childText = transform.GetChild(0).GetComponent<Text>();
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -36,5 +39,6 @@ public class UI_VehicleSelectButton_Script : MonoBehaviour {
         GameObject refGo = parentUI.FindVehicleByIndex(_index);
         _vehicleControllerReference = refGo.GetComponent<Vehicle_Controller_Script>();
         _vehicleControllerReference.ClickedMe();
+        _childText.text = _vehicleControllerReference.name;
     }
 }
