@@ -13,4 +13,8 @@ public class Planet_Script : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    private void OnMouseDown() {
+        Debug.Log("Clicked " + transform.name);
+    }
 }

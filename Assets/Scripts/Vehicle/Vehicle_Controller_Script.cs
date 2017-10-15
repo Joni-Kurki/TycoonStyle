@@ -36,6 +36,9 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     bool _hasLoad;
     bool _isReturning;
 
+    // ForDebugging
+    bool _debugSelect = false;
+
     public string _storageModuleStr;
     // Use this for initialization
     void Start () {
@@ -92,10 +95,21 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 ReturnHomeBase();
             }
         }
-        RefreshCargo();
+        PasteCargoToDebug();
+
+        if (_debugSelect) {
+            Vector3 v1 = new Vector3(transform.position.x - .1f, transform.position.y, transform.position.z - .1f);
+            Vector3 v2 = new Vector3(transform.position.x - .1f, transform.position.y, transform.position.z + .1f);
+            Vector3 v3 = new Vector3(transform.position.x + .1f, transform.position.y, transform.position.z + .1f);
+            Vector3 v4 = new Vector3(transform.position.x + .1f, transform.position.y, transform.position.z - .1f);
+            Debug.DrawLine(v1, v2, Color.red, .1f);
+            Debug.DrawLine(v2, v3, Color.red, .1f);
+            Debug.DrawLine(v3, v4, Color.red, .1f);
+            Debug.DrawLine(v4, v1, Color.red, .1f);
+        }
     }
 
-    private void RefreshCargo() {
+    private void PasteCargoToDebug() {
         for (int i = 0; i < _vehicle_Module_List._storageModuleList.Count; i++) {
             Debug.Log("Cargo["+i+"] "+_vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight() + "/" + _vehicle_Module_List._storageModuleList[i].GetMaxCargoWeight());
         }
@@ -188,5 +202,9 @@ public class Vehicle_Controller_Script : MonoBehaviour {
             transform.position = Vector3.MoveTowards(transform.position, _baseLocation, _vehicleSpeed * Time.deltaTime);
         }
         Debug.DrawLine(this.transform.position, _baseLocation, Color.green, .2f);
+    }
+
+    public void ClickedMe() {
+        _debugSelect = !_debugSelect;
     }
 }
