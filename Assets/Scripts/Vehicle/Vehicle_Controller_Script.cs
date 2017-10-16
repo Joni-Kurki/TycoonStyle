@@ -7,8 +7,17 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     // Vehicle class and subclasses. TODO: needs to be some smarter system here.
     Vehicle _vehicle;
     War_Vehicle _War_vehicle;
-    SpaceMiner_Vehicle _SpaceMiner_vehicle;
+    Space_Miner_Vehicle _SpaceMiner_vehicle;
+    Space_Passanger_Vehicle _SpacePassanger_Vechicle;
     Vehicle_Module_List _vehicle_Module_List;
+
+    // Passanger vehicles waypointings 
+    public Vector3[] _passangerRouteWaypoints;
+    int _passangerCurrentWaypoint;
+    bool _passangerRouteDone;
+    bool _passangerToStart;
+    bool _passangerToEnd;
+    float _passangerVehicleLoadingTime;
 
     // Number of modules
     public int _storageNumber;
@@ -34,6 +43,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     bool _isMoving;
     bool _hasTarget;
     bool _hasLoad;
+    bool _minerHasFullLoad;
     bool _isReturning;
 
     // ForDebugging
@@ -55,8 +65,8 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 _vehicleSpeed = .4f;
                 break;
             case 2:
-                _vehicleName = "Miner Vehicle";
-                _SpaceMiner_vehicle = new SpaceMiner_Vehicle(2, 0, 1);
+                _vehicleName = "Space Miner Vehicle";
+                _SpaceMiner_vehicle = new Space_Miner_Vehicle(2, 0, 1);
                 _storageNumber = _SpaceMiner_vehicle._numberOfStorageModules;
                 _weaponNumber = _SpaceMiner_vehicle._numberOfWeaponModules;
                 _toolNumber = _SpaceMiner_vehicle._numberOfToolModules;
@@ -65,13 +75,44 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 Storage_Vehicle_Module mod = new Storage_Vehicle_Module("Cargo module", 3);
                 _vehicle_Module_List.AddStorageModule(mod);
                 mod = new Storage_Vehicle_Module("Cargo module 2", 5);
-                _currentStorageModule = 0;
-
                 _vehicle_Module_List.AddStorageModule(mod);
+                _currentStorageModule = 0;
+                _minerHasFullLoad = false;
+
                 _vehicleSpeed = 3.3f;
                 _miningPickUpDuration = 3f;
                 _miningUnloadDuration = 2f;
                 _lastTimerTrigger = Time.time;
+                break;
+            case 3:
+                _vehicleName = "Space Passanger Vehicle";
+                _SpacePassanger_Vechicle = new Space_Passanger_Vehicle(3, 0, 0);
+                _storageNumber = _SpacePassanger_Vechicle._numberOfStorageModules;
+                _weaponNumber = _SpacePassanger_Vechicle._numberOfWeaponModules;
+                _toolNumber = _SpacePassanger_Vechicle._numberOfToolModules;
+
+                _vehicle_Module_List = new Vehicle_Module_List();
+
+                Storage_Vehicle_Module passangerModule = new Storage_Vehicle_Module("Passanger module", 3);
+                _vehicle_Module_List.AddStorageModule(passangerModule);
+                mod = new Storage_Vehicle_Module("Passanger module", 5);
+                _vehicle_Module_List.AddStorageModule(passangerModule);
+                mod = new Storage_Vehicle_Module("Passanger module", 2);
+                _vehicle_Module_List.AddStorageModule(passangerModule);
+
+                _vehicleSpeed = 5f;
+                _lastTimerTrigger = Time.time;
+
+                _currentStorageModule = 0;
+                _passangerRouteWaypoints = new Vector3[4] { transform.position, transform.position, transform.position, transform.position };
+                _passangerCurrentWaypoint = 0;
+                // Set starting location to where vehicle was initially.
+                Passanger_SetStartTargetLocation(transform.position);
+                Passanger_SetEndTargetLocation(new Vector3(98, 0, 98));
+                _passangerToStart = false;
+                _passangerToEnd = true;
+                _passangerVehicleLoadingTime = 6f;
+
                 break;
         }
 
@@ -85,19 +126,74 @@ public class Vehicle_Controller_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (Time.time > _lastTimerTrigger) {
-            if (!_hasTarget && !_hasLoad) {
-                FindTarget();
-            } else if (_hasTarget) {
-                MoveToTarget();
-                Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, 1);
-            } else if (!_hasTarget && _hasLoad) {
-                ReturnHomeBase();
+        // Space Miner Vehicle actions
+        if (_vehicleType == 2) {
+            if (Time.time > _lastTimerTrigger) {
+                if (!_hasTarget && !_minerHasFullLoad) {
+                    if (_debugSelect) {
+                        Debug.Log("FindTarget");
+                    }
+                    Miner_FindTarget();
+                } else if (_hasTarget && !_minerHasFullLoad) {
+                    Miner_MoveToTarget();
+                    if (_debugSelect) {
+                        Debug.Log("Moving to target");
+                    }
+                    if (_debugSelect) {
+                        Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, 1);
+                    }
+                } else if (_minerHasFullLoad) {
+                    if (_debugSelect) {
+                        Debug.Log("Full load, moving home");
+                    }
+                    Miner_ReturnHomeBase();
+                    if (_debugSelect) {
+                        Debug.DrawLine(this.transform.position, _baseLocation, Color.green, .2f);
+                    }
+                }
             }
         }
-        PasteCargoToDebug();
-
+        // Space Passanger Vehicle actions
+        if (_vehicleType == 3) {
+            // Let's make waypoints first. TODO: Here boolean check if needs to refresh
+            if(_passangerRouteWaypoints[0] != _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] && !_passangerRouteDone) {
+                Passanger_DoRoute();
+            }// If routes done, let's start moving.
+            else if (_passangerRouteDone) {
+                // If we are @ waypoint, let's move to next waypoint, based on the current one.
+                if (Vector3.Distance(transform.position, _passangerRouteWaypoints[_passangerCurrentWaypoint]) <= .1f) {
+                    if (_passangerToEnd) {
+                        _passangerCurrentWaypoint++;
+                        if (_passangerCurrentWaypoint > 3) {
+                            _lastTimerTrigger = Time.time;
+                            _passangerToEnd = false;
+                            _passangerToStart = true;
+                            _passangerCurrentWaypoint = 2;
+                        }
+                    } else if (_passangerToStart) {
+                        _passangerCurrentWaypoint--;
+                        if (_passangerCurrentWaypoint < 0) {
+                            _lastTimerTrigger = Time.time;
+                            _passangerToEnd = true;
+                            _passangerToStart = false;
+                            _passangerCurrentWaypoint = 1;
+                        }
+                    } 
+                } // If we are on the way, move ship
+                else {
+                    if (Time.time >= _lastTimerTrigger + _passangerVehicleLoadingTime) {
+                        transform.LookAt(_passangerRouteWaypoints[_passangerCurrentWaypoint]);
+                        transform.position = Vector3.MoveTowards(transform.position, _passangerRouteWaypoints[_passangerCurrentWaypoint], _vehicleSpeed * Time.deltaTime);
+                        if (_debugSelect) {
+                            Debug.DrawLine(transform.position, _passangerRouteWaypoints[_passangerCurrentWaypoint], Color.red);
+                        }
+                    }
+                }
+            }
+        }
+        // Degug selected
         if (_debugSelect) {
+            PasteCargoToDebug();
             Vector3 v1 = new Vector3(transform.position.x - .1f, transform.position.y, transform.position.z - .1f);
             Vector3 v2 = new Vector3(transform.position.x - .1f, transform.position.y, transform.position.z + .1f);
             Vector3 v3 = new Vector3(transform.position.x + .1f, transform.position.y, transform.position.z + .1f);
@@ -118,7 +214,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// <summary>
     /// Finds the closest mineable target and checks if it is tagged, if so finds next one non tagged.
     /// </summary>
-    private void FindTarget() {
+    private void Miner_FindTarget() {
         GameObject[] goList = GameObject.FindGameObjectsWithTag("Asteroid_Mineable");
         float closestDistance = Mathf.Infinity;
 
@@ -141,7 +237,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// <summary>
     /// Moves near to desired target
     /// </summary>
-    private void MoveToTarget() {
+    private void Miner_MoveToTarget() {
         transform.LookAt(_closestGameObject.transform);
         // If we're close enough, let's mine this shit.
         if (Vector3.Distance(this.transform.position, _closestGameObject.transform.position) < .1f) {
@@ -157,7 +253,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
             for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
                 if (_vehicle_Module_List._storageModuleList[i].IsCargoFull()) {
                     allStorageFull = true;
-                }else {
+                } else {
                     allStorageFull = false;
                 }
             }
@@ -173,10 +269,12 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                             _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(overFlowCheck);
                         } else {
                             Debug.Log("All storages full!");
+                            
                         }
                     }
                 }
             } else {
+                _minerHasFullLoad = true;
                 Debug.Log("All cargo used!");
             }
             _lastTimerTrigger = Time.time + _miningPickUpDuration;
@@ -189,22 +287,90 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// <summary>
     /// Return vehicle to home base. e.g where it left.
     /// </summary>
-    private void ReturnHomeBase() {
+    private void Miner_ReturnHomeBase() {
         transform.LookAt(_baseLocation);
 
+        // If we have reached baselocation
         if (Vector3.Distance(this.transform.position, _baseLocation) < .1f) {
             _hasLoad = false;
             _isReturning = false;
+            _minerHasFullLoad = false;
+            Miner_EmptyCargo();
             _lastTimerTrigger = Time.time + _miningUnloadDuration;
         } 
         else {
             _isReturning = true;
             transform.position = Vector3.MoveTowards(transform.position, _baseLocation, _vehicleSpeed * Time.deltaTime);
         }
-        Debug.DrawLine(this.transform.position, _baseLocation, Color.green, .2f);
     }
 
-    public void ClickedMe() {
+    private float Miner_EmptyCargo() {
+        float temp = 0;
+        for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
+            temp += _vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight();
+            _vehicle_Module_List._storageModuleList[i].EmptyCargo();
+        }
+        if (_debugSelect) {
+            Debug.Log("@Home, unloading rewarding " + temp);
+        }
+        return temp;
+    }
+
+    /// <summary>
+    /// Primitive waypoint making for point start -> near_start -> near_end -> end
+    /// </summary>
+    private void Passanger_DoRoute() {
+        for (int i = 0; i < 2; i++) {
+            float x = 0, y = 0, z = 0;
+            if (_passangerRouteWaypoints[0].x < _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1].x) {
+                if (i == 0) {
+                    x += 0.5f;
+                } else {
+                    x -= 0.5f;
+                }
+            }
+            if (_passangerRouteWaypoints[0].z < _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1].z) {
+                if (i == 0) {
+                    z += 0.5f;
+                } else {
+                    z -= 0.5f;
+                }
+            }
+            if (i == 0) {
+                _passangerRouteWaypoints[i + 1] = new Vector3(
+                    _passangerRouteWaypoints[0].x + x,
+                    _passangerRouteWaypoints[0].y,
+                    _passangerRouteWaypoints[0].z + z
+                );
+            } else {
+                _passangerRouteWaypoints[i + 1] = new Vector3(
+                    _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1].x + x,
+                    _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1].y,
+                    _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1].z + z
+                );
+            }
+        }
+        _passangerRouteDone = true;
+    }
+
+    /// <summary>
+    /// Sets the start waypoint for passanger vehicle.
+    /// </summary>
+    /// <param name="start"></param>
+    public void Passanger_SetStartTargetLocation(Vector3 start) {
+        _passangerRouteWaypoints[0] = start;
+    }
+
+    /// <summary>
+    /// Sets the end waypoint for passanger vehicle
+    /// </summary>
+    /// <param name="end"></param>
+    public void Passanger_SetEndTargetLocation(Vector3 end) {
+        _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] = end;
+    }
+
+    public void VehicleToggleButton() {
         _debugSelect = !_debugSelect;
     }
+
 }

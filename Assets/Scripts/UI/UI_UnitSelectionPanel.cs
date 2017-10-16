@@ -28,9 +28,9 @@ public class UI_UnitSelectionPanel : MonoBehaviour {
         for(int i=0; i< FindVehicles().Length; i++) {
             GameObject go = Instantiate(uiPrefab, transform);
             go.name = "ReferencedUIButton " + i;
-;            UI_VehicleSelectButton_Script uiButtonReference = go.GetComponent<UI_VehicleSelectButton_Script>();
+            UI_VehicleSelectButton_Script uiButtonReference = go.GetComponent<UI_VehicleSelectButton_Script>();
             uiButtonReference.SetGameObjectReference(go);
-            uiButtonReference.SetIndex(i);
+            uiButtonReference.SetIndexAndTexts(i);
         }
     }
 }

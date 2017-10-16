@@ -59,6 +59,10 @@ public class Storage_Vehicle_Module : Vehicle_Module {
         return 0;
     }
 
+    public void EmptyCargo() {
+        _currentCargoWeigth = 0;
+    }
+
     public bool IsCargoFull() {
         return _currentCargoWeigth == _maxCargoWeight ? true : false;
     }

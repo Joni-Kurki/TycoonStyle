@@ -12,7 +12,7 @@ public class UI_VehicleSelectButton_Script : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        _childText = transform.GetChild(0).GetComponent<Text>();
+        
 
     }
 	
@@ -28,17 +28,18 @@ public class UI_VehicleSelectButton_Script : MonoBehaviour {
         }
     }
 
-    public void SetIndex(int value) {
+    public void SetIndexAndTexts(int value) {
         _index = value;
-    }
-
-    public void ThisClick() {
         // Let's get parent script
         UI_UnitSelectionPanel parentUI = transform.parent.gameObject.GetComponent<UI_UnitSelectionPanel>();
         // Let's get the vehicle go by index;
         GameObject refGo = parentUI.FindVehicleByIndex(_index);
         _vehicleControllerReference = refGo.GetComponent<Vehicle_Controller_Script>();
-        _vehicleControllerReference.ClickedMe();
+        _childText = transform.GetChild(0).GetComponent<Text>();
         _childText.text = _vehicleControllerReference.name;
+    }
+
+    public void ThisClick() {
+        _vehicleControllerReference.VehicleToggleButton();
     }
 }
