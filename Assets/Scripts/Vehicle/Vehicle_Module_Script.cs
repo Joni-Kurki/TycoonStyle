@@ -45,13 +45,13 @@ public class Storage_Vehicle_Module : Vehicle_Module {
     /// <returns></returns>
     public float AddToCargo(float amount) {
         float temp = 0;
-        // No overflow
-        if(_currentCargoWeigth + amount <= _maxCargoWeight) {
+        // Doesnt go over
+        if(_currentCargoWeigth + amount < _maxCargoWeight) {
             _currentCargoWeigth += amount;
             return 0;
         } 
-        // Overflow
-        else if (_currentCargoWeigth + amount > _maxCargoWeight) {
+        // Goes over
+        else if (_currentCargoWeigth + amount >= _maxCargoWeight) {
             temp = (_currentCargoWeigth + amount) - _maxCargoWeight;
             _currentCargoWeigth = _maxCargoWeight;
             return temp;

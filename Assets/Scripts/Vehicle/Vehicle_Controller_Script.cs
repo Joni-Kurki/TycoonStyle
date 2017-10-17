@@ -46,13 +46,18 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     bool _minerHasFullLoad;
     bool _isReturning;
 
+    GameObject _closestSpaceStation;
+
+    public string _debug_minerCargo0 = string.Empty;
+    public string _debug_minerCargo1 = string.Empty;
+
     // ForDebugging
     bool _debugSelect = false;
 
     public string _storageModuleStr;
     // Use this for initialization
     void Start () {
-        _baseLocation = transform.position;
+        //_baseLocation = transform.position;
         // Let's set vehicle stuff here
         _vehicle = new Vehicle();
         switch (_vehicleType) {
@@ -83,6 +88,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                 _miningPickUpDuration = 3f;
                 _miningUnloadDuration = 2f;
                 _lastTimerTrigger = Time.time;
+                Miner_FindAndLinkClosestSpaceStation();
                 break;
             case 3:
                 _vehicleName = "Space Passanger Vehicle";
@@ -126,10 +132,19 @@ public class Vehicle_Controller_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        _debug_minerCargo0 = _vehicle_Module_List._storageModuleList[0].GetCurrentCargoWeight() + "/"+ _vehicle_Module_List._storageModuleList[0].GetMaxCargoWeight();
+        _debug_minerCargo1 = _vehicle_Module_List._storageModuleList[1].GetCurrentCargoWeight() + "/" + _vehicle_Module_List._storageModuleList[1].GetMaxCargoWeight();
         // Space Miner Vehicle actions
         if (_vehicleType == 2) {
             if (Time.time > _lastTimerTrigger) {
-                if (!_hasTarget && !_minerHasFullLoad) {
+                if (Miner_AllCargoSpaceFull()) {
+                    if (_debugSelect) {
+                        Debug.Log("Full load, moving home");
+                        Debug.DrawLine(this.transform.position, _baseLocation, Color.green, .2f);
+                    }
+                    Miner_ReturnHomeBase();
+                }
+                else if (!_hasTarget && !_minerHasFullLoad) {
                     if (_debugSelect) {
                         Debug.Log("FindTarget");
                     }
@@ -138,17 +153,7 @@ public class Vehicle_Controller_Script : MonoBehaviour {
                     Miner_MoveToTarget();
                     if (_debugSelect) {
                         Debug.Log("Moving to target");
-                    }
-                    if (_debugSelect) {
                         Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, 1);
-                    }
-                } else if (_minerHasFullLoad) {
-                    if (_debugSelect) {
-                        Debug.Log("Full load, moving home");
-                    }
-                    Miner_ReturnHomeBase();
-                    if (_debugSelect) {
-                        Debug.DrawLine(this.transform.position, _baseLocation, Color.green, .2f);
                     }
                 }
             }
@@ -216,72 +221,115 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// </summary>
     private void Miner_FindTarget() {
         GameObject[] goList = GameObject.FindGameObjectsWithTag("Asteroid_Mineable");
+        if (goList.Length == 0) {
+            Miner_ReturnHomeBase();
+        } else {
+            float closestDistance = Mathf.Infinity;
+
+            foreach (GameObject go in goList) {
+                if (Vector3.Distance(this.transform.position, go.transform.position) < closestDistance) {
+                    Asteroid_Tag_Script at = go.GetComponent<Asteroid_Tag_Script>();
+                    if (!at._asteroidIsTagged) {
+                        _closestGameObject = go;
+                        closestDistance = Vector3.Distance(this.transform.position, go.transform.position);
+                    }
+                }
+            }
+            Asteroid_Tag_Script aTag = _closestGameObject.GetComponent<Asteroid_Tag_Script>();
+            aTag._asteroidIsTagged = true;
+            _closestDist = (Vector3.Distance(this.transform.position, _closestGameObject.transform.position));
+            Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, .2f);
+            _hasTarget = true;
+        }
+    }
+
+    /// <summary>
+    /// This function links Miner vehicle to closest space station. Also sets base location near it.
+    /// </summary>
+    private void Miner_FindAndLinkClosestSpaceStation() {
+        GameObject[] goList = GameObject.FindGameObjectsWithTag("Space_Station_Linkable");
         float closestDistance = Mathf.Infinity;
 
         foreach (GameObject go in goList) {
-            if(Vector3.Distance(this.transform.position, go.transform.position) < closestDistance) {
-                Asteroid_Tag_Script at = go.GetComponent<Asteroid_Tag_Script>();
-                if (!at._asteroidIsTagged) {
-                    _closestGameObject = go;
-                    closestDistance = Vector3.Distance(this.transform.position, go.transform.position);
-                }
+            if (Vector3.Distance(this.transform.position, go.transform.position) < closestDistance) {
+                closestDistance = Vector3.Distance(this.transform.position, go.transform.position);
+                _closestSpaceStation = go;
             }
         }
-        Asteroid_Tag_Script aTag = _closestGameObject.GetComponent<Asteroid_Tag_Script>();
-        aTag._asteroidIsTagged = true;
-        _closestDist = (Vector3.Distance(this.transform.position, _closestGameObject.transform.position));
-        Debug.DrawLine(this.transform.position, _closestGameObject.transform.position, Color.red, .2f);
-        _hasTarget = true;
-    }
 
+        Space_Station_Script sss = _closestSpaceStation.GetComponent<Space_Station_Script>();
+        sss.Space_Station_Link_Vehicle(gameObject);
+        _baseLocation = _closestSpaceStation.transform.position;
+        if (_debugSelect) {
+            Debug.Log("Linked " + gameObject.name + " -> " + _closestSpaceStation.name);
+        }
+    }
     /// <summary>
     /// Moves near to desired target
     /// </summary>
     private void Miner_MoveToTarget() {
         transform.LookAt(_closestGameObject.transform);
-        // If we're close enough, let's mine this shit.
-        if (Vector3.Distance(this.transform.position, _closestGameObject.transform.position) < .1f) {
-            _hasLoad = true;
-            _hasTarget = false;
-            // Pickup mineable asteroid and destroy gameobject
-            Asteroid_OnMine_Destroy goD = _closestGameObject.GetComponent<Asteroid_OnMine_Destroy>();
-            goD.PickUp();
-            float overFlowCheck = 0;
+        if (!Miner_AllCargoSpaceFull()) {
+            // If we're close enough, let's mine this shit.
+            if (Vector3.Distance(this.transform.position, _closestGameObject.transform.position) < .1f) {
+                _hasLoad = true;
+                _hasTarget = false;
+                // Pickup mineable asteroid and destroy gameobject
+                Asteroid_OnMine_Destroy goD = _closestGameObject.GetComponent<Asteroid_OnMine_Destroy>();
+                goD.PickUp();
+                float overFlowCheck = 0;
 
-            // With this we loop all storage modules and if all of em all full, we cant pick up more cargo.
-            bool allStorageFull = false;
-            for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
-                if (_vehicle_Module_List._storageModuleList[i].IsCargoFull()) {
-                    allStorageFull = true;
-                } else {
-                    allStorageFull = false;
-                }
-            }
-            if (!allStorageFull) {
-                // Check if storage module is full.
-                if (!_vehicle_Module_List._storageModuleList[_currentStorageModule].IsCargoFull()) {
-                    // If we get overflow
-                    overFlowCheck = _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(1600);
-                    if (overFlowCheck != 0) {
-                        Debug.Log("Went over " + overFlowCheck);
-                        if (_currentStorageModule < _vehicle_Module_List._storageModuleList.Count) {
-                            _currentStorageModule++;
-                            _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(overFlowCheck);
-                        } else {
-                            Debug.Log("All storages full!");
-                            
-                        }
+                // With this we loop all storage modules and if all of em all full, we cant pick up more cargo.
+                bool allStorageFull = false;
+                for (int i = 0; i < _vehicle_Module_List._storageModuleList.Count; i++) {
+                    if (_vehicle_Module_List._storageModuleList[i].IsCargoFull()) {
+                        allStorageFull = true;
+                    } else {
+                        allStorageFull = false;
                     }
                 }
+                if (!Miner_AllCargoSpaceFull()) {
+                    // Check if storage module is full.
+                    if (!_vehicle_Module_List._storageModuleList[_currentStorageModule].IsCargoFull()) {
+                        // If we get overflow
+                        overFlowCheck = _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(1600);
+                        if (overFlowCheck != 0) {
+                            Debug.Log("Went over " + overFlowCheck);
+                            if (_currentStorageModule < _vehicle_Module_List._storageModuleList.Count) {
+                                _currentStorageModule++;
+                                _vehicle_Module_List._storageModuleList[_currentStorageModule].AddToCargo(overFlowCheck);
+                            } else {
+                                Debug.Log("All storages full!");
+                                Miner_ReturnHomeBase();
+                            }
+                        }
+                    }
+                } else {
+                    _minerHasFullLoad = true;
+                    Miner_ReturnHomeBase();
+                    //Debug.Log("All cargo used!");
+                }
+                _lastTimerTrigger = Time.time + _miningPickUpDuration;
             } else {
-                _minerHasFullLoad = true;
-                Debug.Log("All cargo used!");
+                transform.position = Vector3.MoveTowards(transform.position, _closestGameObject.transform.position, _vehicleSpeed * Time.deltaTime);
             }
-            _lastTimerTrigger = Time.time + _miningPickUpDuration;
         }
-        else {
-            transform.position = Vector3.MoveTowards(transform.position, _closestGameObject.transform.position, _vehicleSpeed * Time.deltaTime);
+    }
+
+    private bool Miner_AllCargoSpaceFull() {
+        int temp = 0;
+        for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
+            if(_vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight() >= _vehicle_Module_List._storageModuleList[i].GetMaxCargoWeight()) {
+                temp++;
+            } 
         }
+        if(temp == _vehicle_Module_List._storageModuleList.Count) {
+            if (_debugSelect) {
+                Debug.Log("New debug:: All storage used. "+temp);
+            }
+            return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -304,16 +352,18 @@ public class Vehicle_Controller_Script : MonoBehaviour {
         }
     }
 
-    private float Miner_EmptyCargo() {
-        float temp = 0;
+    private void Miner_EmptyCargo() {
+        float wardedCargoValue = 0;
         for(int i=0; i<_vehicle_Module_List._storageModuleList.Count; i++) {
-            temp += _vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight();
+            wardedCargoValue += _vehicle_Module_List._storageModuleList[i].GetCurrentCargoWeight();
             _vehicle_Module_List._storageModuleList[i].EmptyCargo();
         }
+        _currentStorageModule = 0;
+        Space_Station_Script sss = _closestSpaceStation.GetComponent<Space_Station_Script>();
+        sss.Unload_Cargo(wardedCargoValue);
         if (_debugSelect) {
-            Debug.Log("@Home, unloading rewarding " + temp);
+            Debug.Log("@Home, unloading rewarding " + wardedCargoValue);
         }
-        return temp;
     }
 
     /// <summary>
