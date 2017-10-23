@@ -40,6 +40,6 @@ public class UI_VehicleSelectButton_Script : MonoBehaviour {
     }
 
     public void ThisClick() {
-        _vehicleControllerReference.VehicleToggleButton();
+        _vehicleControllerReference.VehicleToggleButton_Click();
     }
 }

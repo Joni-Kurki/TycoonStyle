@@ -9,6 +9,7 @@ public class Planet_Script : MonoBehaviour {
     public GameObject _uiStatsPanelPrefab;
     bool _uiToggled;
     bool _uiInitiated;
+    public int _planetIndex;
 
 	// Use this for initialization
 	void Start () {
@@ -49,5 +50,9 @@ public class Planet_Script : MonoBehaviour {
         instantiatedUIPanelContainer.transform.localScale = transform.parent.localScale / 5; 
         Vector3 offset = new Vector3(0, (instantiatedUIPanelContainer.transform.parent.parent.localScale.y / 2) + (transform.localScale.y / 8), 0);
         instantiatedUIPanelContainer.transform.Translate(transform.parent.position + offset);
+    }
+
+    public void SetPlanetIndex(int index) {
+        _planetIndex = index;
     }
 }

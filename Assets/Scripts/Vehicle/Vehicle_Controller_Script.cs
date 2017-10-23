@@ -54,7 +54,6 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     // ForDebugging
     bool _debugSelect = false;
 
-    public string _storageModuleStr;
     // Use this for initialization
     void Start () {
         //_baseLocation = transform.position;
@@ -408,7 +407,19 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// </summary>
     /// <param name="start"></param>
     public void Passanger_SetStartTargetLocation(Vector3 start) {
-        _passangerRouteWaypoints[0] = start;
+        //_passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] = end;
+        GameObject[] goList = GameObject.FindGameObjectsWithTag("Space_Station_Linkable");
+
+        float closestDistance = Mathf.Infinity;
+        GameObject closestGo = null;
+        for (int i = 0; i < goList.Length; i++) {
+            if (Vector3.Distance(transform.position, goList[i].transform.position) <= closestDistance) {
+                closestGo = goList[i];
+                closestDistance = Vector3.Distance(transform.position, goList[i].transform.position);
+            }
+        }
+        // Farthest Wp
+        _passangerRouteWaypoints[0] = closestGo.transform.position;
     }
 
     /// <summary>
@@ -416,10 +427,22 @@ public class Vehicle_Controller_Script : MonoBehaviour {
     /// </summary>
     /// <param name="end"></param>
     public void Passanger_SetEndTargetLocation(Vector3 end) {
-        _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] = end;
+        //_passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] = end;
+        GameObject[] goList = GameObject.FindGameObjectsWithTag("Space_Station_Linkable");
+
+        float farthersDistance = -1;
+        GameObject fartherGo = null;
+        for(int i=0; i<goList.Length; i++) {
+            if(Vector3.Distance(transform.position, goList[i].transform.position) >= farthersDistance) {
+                fartherGo = goList[i];
+                farthersDistance = Vector3.Distance(transform.position, goList[i].transform.position);
+            }
+        }
+        // Farthest Wp
+        _passangerRouteWaypoints[_passangerRouteWaypoints.Length - 1] = fartherGo.transform.position;
     }
 
-    public void VehicleToggleButton() {
+    public void VehicleToggleButton_Click() {
         _debugSelect = !_debugSelect;
     }
 

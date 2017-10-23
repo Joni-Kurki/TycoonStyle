@@ -8,15 +8,28 @@ public class Space_Station_Script : MonoBehaviour {
     public List<GameObject> _linkedVehicles;
     const int MAX_CONNECTED_SHIPS = 3;
 
+    const int MAX_PASSANGERS = 1000;
+    const float PASSANGER_ARRIVE_RATE = 2.5f;
+    public int _currentPassangerCount;
+    float _lastPassangerCheck;
+
+
 	// Use this for initialization
 	void Start () {
         _linkedPlanet = FindClosestPlanet();
         _linkedVehicles = new List<GameObject>();
+        _currentPassangerCount = 0;
+        _lastPassangerCheck = 0;
     }
 	
 	// Update is called once per frame
 	void Update () {
-		
+        // If stations doesnt have max passangers.
+		if(_currentPassangerCount < MAX_PASSANGERS) {
+            if(_lastPassangerCheck < Time.time + PASSANGER_ARRIVE_RATE) {
+                _currentPassangerCount++;
+            }
+        }
 	}
 
     /// <summary>
@@ -38,6 +51,19 @@ public class Space_Station_Script : MonoBehaviour {
             }
         }
         return closestPlanet;
+    }
+
+    public void TakePassangers(int value) {
+        if (_currentPassangerCount < 0) {
+            _currentPassangerCount = 0;
+        } else {
+            _currentPassangerCount -= value;
+        }
+    }
+
+    public void Unload_Passangers(int number) {
+        Planet_Script ps = _linkedPlanet.GetComponent<Planet_Script>();
+        ps.RewardCurrencyFromMining(number);
     }
 
     /// <summary>
